@@ -3,41 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <style>
+    /* Complete CSS to replace everything between <style> and </style> in popup.html */
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     body {
       width: 500px;
-      min-height: 600px;
+      min-height: 700px;      /* Increased from 600px */
+      max-height: 800px;      /* Set a maximum height */
+      height: auto;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f8f9fa;
+      overflow-y: auto;
+      overflow-x: hidden;
     }
-    
+
     .header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 20px;
       text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    
+
     .header h1 {
       font-size: 20px;
       font-weight: 600;
       margin-bottom: 5px;
     }
-    
+
     .header p {
       font-size: 12px;
       opacity: 0.9;
     }
-    
+
     .container {
       padding: 20px;
+      padding-bottom: 30px;
     }
-    
+
     .status-card {
       background: white;
       border-radius: 12px;
@@ -45,37 +55,50 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       margin-bottom: 20px;
     }
-    
+
     .video-info {
       margin-bottom: 15px;
     }
-    
+
     .video-title {
       font-size: 16px;
       font-weight: 600;
       color: #2d3748;
       margin-bottom: 5px;
       line-height: 1.4;
+      max-height: none;
+      overflow: visible;
     }
-    
+
     .video-channel {
       font-size: 13px;
       color: #718096;
     }
-    
-    .language-selector {
+
+    .video-duration {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .language-selector, .summary-type-selector {
       margin-bottom: 15px;
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    
-    .language-selector label {
+
+    .summary-type-selector {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .language-selector label, .summary-type-selector > label {
       font-size: 14px;
       font-weight: 600;
       color: #4a5568;
     }
-    
+
     .language-selector select {
       flex: 1;
       padding: 8px 12px;
@@ -86,22 +109,41 @@
       cursor: pointer;
       transition: border-color 0.2s;
     }
-    
+
     .language-selector select:hover {
       border-color: #cbd5e0;
     }
-    
+
     .language-selector select:focus {
       outline: none;
       border-color: #667eea;
     }
-    
+
+    .radio-group {
+      display: flex;
+      gap: 15px;
+      margin-top: 8px;
+      width: 100%;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .radio-label input[type="radio"] {
+      margin: 0;
+    }
+
     .button-container {
       display: flex;
       gap: 10px;
       margin-bottom: 20px;
     }
-    
+
     button {
       flex: 1;
       padding: 12px 20px;
@@ -111,41 +153,60 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    
+
     .primary-btn {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
     }
-    
+
     .primary-btn:hover:not(:disabled) {
       transform: translateY(-1px);
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
-    
+
     .secondary-btn {
       background: #e2e8f0;
       color: #4a5568;
     }
-    
+
     .secondary-btn:hover:not(:disabled) {
       background: #cbd5e0;
     }
-    
+
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
     }
-    
+
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ffffff40;
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
     .summary-container {
       background: white;
       border-radius: 12px;
       padding: 22px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      max-height: 480px;
+      max-height: 450px;      /* Increased for more content visibility */
       overflow-y: auto;
+      margin-bottom: 20px;
     }
-    
+
     .summary-header {
       font-size: 16px;
       font-weight: 600;
@@ -153,36 +214,59 @@
       margin-bottom: 15px;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: -22px;
+      background: white;
+      padding: 22px 22px 10px 22px;
+      margin: -22px -22px 15px -22px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .summary-actions {
+      display: flex;
       gap: 8px;
     }
-    
+
     .summary-content {
       font-size: 16px;
       line-height: 1.8;
       color: #4a5568;
+      padding-right: 10px;
     }
-    
+
     .summary-content h3 {
       font-size: 18px;
       font-weight: 600;
       color: #2d3748;
       margin: 20px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
-    
+
     .summary-content ul {
       margin-left: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }
-    
+
     .summary-content li {
       margin-bottom: 8px;
+      line-height: 1.6;
     }
-    
+
+    .summary-footer {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #f1f5f9;
+      text-align: center;
+    }
+
     .loading {
       text-align: center;
       padding: 40px;
     }
-    
+
     .loading-spinner {
       border: 3px solid #f3f4f6;
       border-top: 3px solid #667eea;
@@ -192,12 +276,23 @@
       animation: spin 1s linear infinite;
       margin: 0 auto 15px;
     }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
     }
-    
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
     .error {
       background: #fee;
       border: 1px solid #fcc;
@@ -207,7 +302,49 @@
       margin-bottom: 15px;
       font-size: 14px;
     }
-    
+
+    .error-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .error-icon {
+      font-size: 20px;
+    }
+
+    .error-message {
+      color: #7f1d1d;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .error-actions h4 {
+      color: #7f1d1d;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .error-actions ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+
+    .error-actions li {
+      margin-bottom: 5px;
+      color: #7f1d1d;
+      font-size: 14px;
+    }
+
     .warning {
       background: #fef3cd;
       border: 1px solid #ffeeba;
@@ -217,34 +354,34 @@
       margin-bottom: 15px;
       font-size: 14px;
     }
-    
+
     .settings-link {
       text-align: center;
       margin-top: 15px;
       font-size: 13px;
     }
-    
+
     .settings-link a {
       color: #667eea;
       text-decoration: none;
     }
-    
+
     .settings-link a:hover {
       text-decoration: underline;
     }
-    
+
     .not-youtube {
       text-align: center;
       padding: 40px 20px;
       color: #718096;
     }
-    
+
     .not-youtube-icon {
       font-size: 48px;
       margin-bottom: 15px;
     }
-    
-    .copy-btn {
+
+    .copy-btn, .share-btn, .feedback-btn {
       background: #e2e8f0;
       color: #4a5568;
       border: none;
@@ -252,184 +389,64 @@
       border-radius: 6px;
       font-size: 12px;
       cursor: pointer;
-      margin-left: auto;
+      transition: background-color 0.2s;
     }
-    
-    .copy-btn:hover {
+
+    .copy-btn:hover, .share-btn:hover, .feedback-btn:hover {
       background: #cbd5e0;
     }
-    
-    /* Enhanced loading and progress styles */
-    .progress-bar {
-      width: 100%;
-      height: 4px;
-      background: #e2e8f0;
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      transition: width 0.3s ease;
-      width: 0%;
-    }
-    
-    .btn-spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid #ffffff40;
-      border-top: 2px solid #ffffff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: 8px;
-    }
-    
-    /* Summary enhancements */
-    .cache-indicator {
-      color: #10b981;
-      font-size: 12px;
-    }
-    
-    .time-indicator {
-      color: #6b7280;
-      font-size: 11px;
-    }
-    
-    .summary-actions {
-      display: flex;
-      gap: 8px;
-      margin-left: auto;
-    }
-    
-    .share-btn, .feedback-btn {
-      background: #f3f4f6;
-      color: #374151;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    
-    .share-btn:hover, .feedback-btn:hover {
-      background: #e5e7eb;
-    }
-    
-    .summary-footer {
-      margin-top: 15px;
-      padding-top: 15px;
-      border-top: 1px solid #e5e7eb;
-      text-align: center;
-    }
-    
-    /* Enhanced error styles */
-    .error-card {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 15px;
-    }
-    
-    .error-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    
-    .error-icon {
-      font-size: 20px;
-    }
-    
-    .error-header h3 {
-      color: #dc2626;
-      font-size: 16px;
-      margin: 0;
-    }
-    
-    .error-message {
-      color: #7f1d1d;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-    
-    .error-actions h4 {
-      color: #991b1b;
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-    
-    .error-actions ul {
-      margin: 10px 0;
-      padding-left: 20px;
-    }
-    
-    .error-actions li {
-      margin-bottom: 5px;
-      color: #7f1d1d;
-    }
-    
-    /* Radio button styles */
-    .summary-type-selector {
-      margin-bottom: 15px;
-    }
-    
-    .summary-type-selector label {
-      font-size: 14px;
-      font-weight: 600;
-      color: #4a5568;
-      margin-bottom: 8px;
-      display: block;
-    }
-    
-    .radio-group {
-      display: flex;
-      gap: 15px;
-    }
-    
-    .radio-label {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    
-    .radio-label input[type="radio"] {
-      margin: 0;
-    }
-    
-    /* Video duration and quick stats */
-    .video-duration {
-      font-size: 12px;
-      color: #718096;
-      margin-top: 3px;
-    }
-    
-    .quick-stats {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid #e2e8f0;
-      font-size: 12px;
-      color: #718096;
-    }
-    
-    /* Success state for copy button */
+
     .copy-btn.success {
       background: #10b981 !important;
       color: white;
     }
-    
-    /* Button enhancements */
-    .btn-text {
-      display: inline-block;
+
+    .cache-indicator {
+      color: #10b981;
+      font-size: 12px;
+      margin-left: 5px;
     }
-    
-    .btn-icon {
-      margin-left: 8px;
+
+    .time-indicator {
+      color: #6b7280;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+
+    .summary-container::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .summary-container::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 3px;
+    }
+
+    .summary-container::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+
+    .summary-container::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    @media (max-height: 600px) {
+      body {
+        max-height: 90vh;
+      }
+      
+      .summary-container {
+        max-height: 300px;
+      }
+    }
+
+    .quick-stats {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f1f5f9;
     }
   </style>
 </head>
