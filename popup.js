@@ -127,6 +127,7 @@ async function summarizeVideo(videoInfo, summaryType) {
     
     // Get selected language
     const selectedLanguage = document.getElementById('language').value;
+    console.log('Selected language:', selectedLanguage); // Debug log
     
     // Send to background script for API call
     const response = await chrome.runtime.sendMessage({
