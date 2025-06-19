@@ -1,3 +1,22 @@
+// Language options
+const languages = [
+  { code: 'en', name: 'English' },
+  { code: 'es', name: 'Español (Spanish)' },
+  { code: 'fr', name: 'Français (French)' },
+  { code: 'de', name: 'Deutsch (German)' },
+  { code: 'pt', name: 'Português (Portuguese)' },
+  { code: 'ru', name: 'Русский (Russian)' },
+  { code: 'ja', name: '日本語 (Japanese)' },
+  { code: 'ko', name: '한국어 (Korean)' },
+  { code: 'zh', name: '中文 (Chinese)' },
+  { code: 'hi', name: 'हिंदी (Hindi)' },
+  { code: 'ar', name: 'العربية (Arabic)' },
+  { code: 'it', name: 'Italiano (Italian)' },
+  { code: 'nl', name: 'Nederlands (Dutch)' },
+  { code: 'tr', name: 'Türkçe (Turkish)' },
+  { code: 'vi', name: 'Tiếng Việt (Vietnamese)' }
+];
+
 document.addEventListener('DOMContentLoaded', async () => {
   const contentDiv = document.getElementById('content');
   
@@ -33,13 +52,27 @@ function showNotYouTube() {
   `;
 }
 
-function showVideoInfo(videoInfo) {
+async function showVideoInfo(videoInfo) {
   const contentDiv = document.getElementById('content');
+  
+  // Get saved language preference
+  const { language = 'en' } = await chrome.storage.sync.get(['language']);
+  
   contentDiv.innerHTML = `
     <div class="status-card">
       <div class="video-info">
         <div class="video-title">${escapeHtml(videoInfo.title)}</div>
         <div class="video-channel">${escapeHtml(videoInfo.channel || 'Unknown Channel')}</div>
+      </div>
+      <div class="language-selector">
+        <label for="language">Summary Language:</label>
+        <select id="language">
+          ${languages.map(lang => `
+            <option value="${lang.code}" ${lang.code === language ? 'selected' : ''}>
+              ${lang.name}
+            </option>
+          `).join('')}
+        </select>
       </div>
       <div class="button-container">
         <button id="summarizeBtn" class="primary-btn">Summarize Video</button>
@@ -48,6 +81,11 @@ function showVideoInfo(videoInfo) {
     </div>
     <div id="summaryContainer"></div>
   `;
+  
+  // Save language preference when changed
+  document.getElementById('language').addEventListener('change', async (e) => {
+    await chrome.storage.sync.set({ language: e.target.value });
+  });
   
   document.getElementById('summarizeBtn').addEventListener('click', () => {
     summarizeVideo(videoInfo, 'detailed');
@@ -87,12 +125,16 @@ async function summarizeVideo(videoInfo, summaryType) {
     // Update loading message
     summaryContainer.querySelector('.loading p').textContent = 'Generating summary...';
     
+    // Get selected language
+    const selectedLanguage = document.getElementById('language').value;
+    
     // Send to background script for API call
     const response = await chrome.runtime.sendMessage({
       action: 'summarize',
       transcript: transcript,
       videoInfo: videoInfo,
-      summaryType: summaryType
+      summaryType: summaryType,
+      language: selectedLanguage
     });
     
     if (response.error) {

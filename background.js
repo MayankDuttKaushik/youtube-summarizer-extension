@@ -9,7 +9,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 async function handleSummarization(request) {
-  const { transcript, videoInfo, summaryType } = request;
+  const { transcript, videoInfo, summaryType, language = 'en' } = request;
   
   try {
     // Validate inputs
@@ -30,7 +30,8 @@ async function handleSummarization(request) {
       body: JSON.stringify({
         transcript: transcript,
         videoInfo: videoInfo,
-        summaryType: summaryType
+        summaryType: summaryType,
+        language: language
       })
     });
     
