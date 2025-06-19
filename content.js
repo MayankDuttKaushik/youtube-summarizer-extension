@@ -9,40 +9,8 @@ async function extractTranscript() {
   const videoId = getVideoId();
   if (!videoId) return null;
 
-  try {
-    // Method 1: Try using the embedded player API endpoint
-    const innertubeApiKey = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
-    const response = await fetch('https://www.youtube.com/youtubei/v1/get_transcript?key=' + innertubeApiKey, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: 'WEB',
-            clientVersion: '2.0',
-          },
-        },
-        params: btoa(`\n\x0b${videoId}`),
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      if (data.actions) {
-        const cueGroups = data.actions[0].updateEngagementPanelAction.content.transcriptRenderer.body.transcriptBodyRenderer.cueGroups;
-        let transcript = '';
-        for (const group of cueGroups) {
-          const cue = group.transcriptCueGroupRenderer.cues[0].transcriptCueRenderer;
-          transcript += cue.cue.simpleText + ' ';
-        }
-        return transcript.trim();
-      }
-    }
-  } catch (error) {
-    console.log('Method 1 failed, trying alternative method...');
-  }
+  // Skip Method 1 for security - removed hardcoded API key
+  // Method 1 would require proper API authentication
 
   // Method 2: Parse from page data
   try {
@@ -156,6 +124,16 @@ function getVideoInfo() {
   };
 }
 
+// Function to get video duration
+function getVideoDuration() {
+  // Try multiple selectors for duration
+  const durationEl = document.querySelector('span.ytp-time-duration') ||
+                     document.querySelector('.ytp-time-duration') ||
+                     document.querySelector('[class*="duration"]');
+  
+  return durationEl ? durationEl.textContent.trim() : null;
+}
+
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getVideoInfo') {
@@ -166,5 +144,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ transcript });
     });
     return true; // Will respond asynchronously
+  } else if (request.action === 'getDuration') {
+    const duration = getVideoDuration();
+    sendResponse({ duration });
   }
 });

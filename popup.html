@@ -258,6 +258,187 @@
     .copy-btn:hover {
       background: #cbd5e0;
     }
+    
+    /* Enhanced loading and progress styles */
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+    
+    .btn-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid transparent;
+      border-top: 2px solid currentColor;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+    
+    /* Summary enhancements */
+    .cache-indicator {
+      color: #fbbf24;
+      font-size: 14px;
+      margin-left: 5px;
+    }
+    
+    .time-indicator {
+      color: #6b7280;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+    
+    .summary-actions {
+      display: flex;
+      gap: 8px;
+      margin-left: auto;
+    }
+    
+    .share-btn, .feedback-btn {
+      background: #f3f4f6;
+      color: #4b5563;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .share-btn:hover, .feedback-btn:hover {
+      background: #e5e7eb;
+    }
+    
+    .summary-footer {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #e5e7eb;
+      text-align: center;
+    }
+    
+    /* Enhanced error styles */
+    .error-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .error-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .error-icon {
+      font-size: 20px;
+    }
+    
+    .error-header h3 {
+      color: #dc2626;
+      font-size: 16px;
+      margin: 0;
+    }
+    
+    .error-message {
+      color: #7f1d1d;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+    
+    .error-actions h4 {
+      color: #991b1b;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .error-actions ul {
+      text-align: left;
+      color: #7f1d1d;
+      font-size: 13px;
+      margin: 0 auto;
+      display: inline-block;
+    }
+    
+    .error-actions li {
+      margin-bottom: 4px;
+    }
+    
+    /* Radio button styles */
+    .summary-type-selector {
+      margin-bottom: 15px;
+    }
+    
+    .summary-type-selector label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .radio-group {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #4a5568;
+      cursor: pointer;
+      font-weight: normal !important;
+    }
+    
+    .radio-label input[type="radio"] {
+      margin: 0;
+    }
+    
+    /* Video duration and quick stats */
+    .video-duration {
+      font-size: 12px;
+      color: #718096;
+      margin-top: 3px;
+    }
+    
+    .quick-stats {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 12px;
+      color: #718096;
+    }
+    
+    /* Success state for copy button */
+    .copy-btn.success {
+      background: #10b981;
+      color: white;
+    }
+    
+    /* Button enhancements */
+    .btn-text {
+      display: inline-block;
+    }
+    
+    .btn-icon {
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
