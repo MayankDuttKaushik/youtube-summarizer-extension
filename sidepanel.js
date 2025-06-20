@@ -433,16 +433,16 @@ function showFeedbackForm() {
         <p>Your feedback helps make summaries better for everyone.</p>
       </div>
       <div class="feedback-options">
-        <button class="feedback-option" onclick="sendFeedback('accuracy')">
+        <button class="feedback-option" data-feedback-type="accuracy">
           📊 Improve Accuracy
         </button>
-        <button class="feedback-option" onclick="sendFeedback('length')">
+        <button class="feedback-option" data-feedback-type="length">
           📏 Better Length
         </button>
-        <button class="feedback-option" onclick="sendFeedback('language')">
+        <button class="feedback-option" data-feedback-type="language">
           🌍 Language Issues
         </button>
-        <button class="feedback-option" onclick="sendFeedback('other')">
+        <button class="feedback-option" data-feedback-type="other">
           💭 Other Feedback
         </button>
       </div>
@@ -494,32 +494,40 @@ function showFeedbackForm() {
   `;
   document.head.appendChild(style);
   
-  // Add event listeners
+  // Add event listeners for feedback buttons
+  document.querySelectorAll('.feedback-option').forEach(button => {
+    button.addEventListener('click', (e) => {
+      const feedbackType = e.target.getAttribute('data-feedback-type');
+      sendFeedback(feedbackType);
+    });
+  });
+  
+  // Add event listener for close button
   document.getElementById('closeFeedback').addEventListener('click', () => {
     document.querySelector('.feedback-form').remove();
   });
+}
+
+function sendFeedback(type) {
+  // Track feedback type (privacy-friendly)
+  chrome.storage.local.get(['feedbackStats'], (result) => {
+    const stats = result.feedbackStats || {};
+    stats[type] = (stats[type] || 0) + 1;
+    chrome.storage.local.set({ feedbackStats: stats });
+  });
   
-  window.sendFeedback = (type) => {
-    // Track feedback type (privacy-friendly)
-    chrome.storage.local.get(['feedbackStats'], (result) => {
-      const stats = result.feedbackStats || {};
-      stats[type] = (stats[type] || 0) + 1;
-      chrome.storage.local.set({ feedbackStats: stats });
-    });
-    
-    // Show thank you message
-    document.querySelector('.feedback-form').innerHTML = `
-      <div style="text-align: center; padding: 16px;">
-        <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
-        <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
-        <p style="color: #718096; font-size: 12px;">Your feedback has been recorded and will help us improve the extension.</p>
-      </div>
-    `;
-    
-    setTimeout(() => {
-      document.querySelector('.feedback-form')?.remove();
-    }, 3000);
-  };
+  // Show thank you message
+  document.querySelector('.feedback-form').innerHTML = `
+    <div style="text-align: center; padding: 16px;">
+      <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
+      <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
+      <p style="color: #718096; font-size: 12px;">Your feedback has been recorded and will help us improve the extension.</p>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    document.querySelector('.feedback-form')?.remove();
+  }, 3000);
 }
 
 // Keep your existing helper functions
