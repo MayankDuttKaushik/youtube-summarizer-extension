@@ -120,6 +120,12 @@ async function handleTabActivated(activeInfo) {
 async function loadVideoContent(tab) {
   const contentDiv = document.getElementById('content');
   
+  // Clear any existing summary when switching videos
+  const summaryContainer = document.getElementById('summaryContainer');
+  if (summaryContainer) {
+    summaryContainer.innerHTML = '';
+  }
+  
   try {
     // Get video info from content script with timeout
     const videoInfo = await Promise.race([
@@ -128,8 +134,12 @@ async function loadVideoContent(tab) {
     ]);
     
     if (videoInfo && videoInfo.videoId) {
-      currentVideoInfo = videoInfo;
-      showVideoInfo(videoInfo);
+      // Only update if this is actually a different video
+      if (!currentVideoInfo || currentVideoInfo.videoId !== videoInfo.videoId) {
+        console.log(`Loading new video: ${videoInfo.title} (${videoInfo.videoId})`);
+        currentVideoInfo = videoInfo;
+        showVideoInfo(videoInfo);
+      }
     } else {
       showError('Could not get video information', 'Video Detection Failed');
     }
