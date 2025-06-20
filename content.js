@@ -101,22 +101,56 @@ async function extractTranscript() {
   return null;
 }
 
-// Function to get video info
-function getVideoInfo() {
-  // Try multiple selectors for video title
-  const videoTitle = document.querySelector('h1.ytd-video-primary-info-renderer')?.textContent?.trim() || 
-                     document.querySelector('h1.title')?.textContent?.trim() ||
-                     document.querySelector('yt-formatted-string.ytd-video-primary-info-renderer')?.textContent?.trim() ||
-                     document.querySelector('#container h1 yt-formatted-string')?.textContent?.trim() ||
-                     document.title.replace(' - YouTube', '');
-  
-  // Try multiple selectors for channel name
-  const channelName = document.querySelector('#channel-name a')?.textContent?.trim() ||
-                      document.querySelector('#owner #channel-name')?.textContent?.trim() ||
-                      document.querySelector('ytd-channel-name a')?.textContent?.trim() ||
-                      document.querySelector('#upload-info #channel-name')?.textContent?.trim();
-  
+// Function to get video info with retry for title
+async function getVideoInfo() {
   const videoId = getVideoId();
+  
+  // Function to extract title with multiple selectors
+  function extractTitle() {
+    return document.querySelector('h1.ytd-video-primary-info-renderer')?.textContent?.trim() || 
+           document.querySelector('h1.title')?.textContent?.trim() ||
+           document.querySelector('yt-formatted-string.ytd-video-primary-info-renderer')?.textContent?.trim() ||
+           document.querySelector('#container h1 yt-formatted-string')?.textContent?.trim() ||
+           document.querySelector('h1[class*="title"]')?.textContent?.trim() ||
+           null;
+  }
+  
+  // Function to extract channel name
+  function extractChannel() {
+    return document.querySelector('#channel-name a')?.textContent?.trim() ||
+           document.querySelector('#owner #channel-name')?.textContent?.trim() ||
+           document.querySelector('ytd-channel-name a')?.textContent?.trim() ||
+           document.querySelector('#upload-info #channel-name')?.textContent?.trim();
+  }
+  
+  // Try to get title immediately
+  let videoTitle = extractTitle();
+  
+  // If no title found or title doesn't seem to match the video ID, wait and retry
+  if (!videoTitle || videoTitle.includes('YouTube')) {
+    console.log('⏳ Waiting for YouTube to update title...');
+    
+    // Wait up to 3 seconds for YouTube to update the title
+    for (let i = 0; i < 6; i++) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const newTitle = extractTitle();
+      if (newTitle && !newTitle.includes('YouTube')) {
+        videoTitle = newTitle;
+        console.log('✅ Title updated:', videoTitle);
+        break;
+      }
+    }
+  }
+  
+  // Fallback to document title if still no luck
+  if (!videoTitle) {
+    videoTitle = document.title.replace(' - YouTube', '');
+  }
+  
+  const channelName = extractChannel();
+  
+  console.log('📺 Video info extracted:', { videoId, title: videoTitle, channel: channelName });
   
   return {
     videoId,
@@ -146,14 +180,17 @@ function detectVideoChange() {
     
     console.log('🎬 Video change detected:', newVideoId, window.location.href);
     
-    // Notify background script of video change
-    chrome.runtime.sendMessage({
-      action: 'videoChanged',
-      videoId: newVideoId,
-      url: window.location.href
-    }).catch(() => {
-      // Side panel might not be open, which is fine
-    });
+    // Add a small delay to let YouTube update the page content
+    setTimeout(() => {
+      // Notify background script of video change
+      chrome.runtime.sendMessage({
+        action: 'videoChanged',
+        videoId: newVideoId,
+        url: window.location.href
+      }).catch(() => {
+        // Side panel might not be open, which is fine
+      });
+    }, 1000); // Wait 1 second for YouTube to update
   }
 }
 
@@ -167,8 +204,13 @@ detectVideoChange();
 // Listen for messages from side panel and background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getVideoInfo') {
-    const info = getVideoInfo();
-    sendResponse(info);
+    getVideoInfo().then(info => {
+      sendResponse(info);
+    }).catch(error => {
+      console.error('Error getting video info:', error);
+      sendResponse({ error: 'Failed to get video info' });
+    });
+    return true; // Will respond asynchronously
   } else if (request.action === 'getTranscript') {
     extractTranscript().then(transcript => {
       sendResponse({ transcript });
