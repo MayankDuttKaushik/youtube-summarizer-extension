@@ -10,7 +10,9 @@
       "Bash(git commit:*)",
       "Bash(git push:*)",
       "Bash(grep:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:youtube-summarizer-api-production.up.railway.app)"
     ],
     "deny": []
   }
