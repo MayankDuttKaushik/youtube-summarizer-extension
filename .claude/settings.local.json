@@ -14,7 +14,9 @@
       "Bash(curl:*)",
       "WebFetch(domain:youtube-summarizer-api-production.up.railway.app)",
       "Bash(npm install:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npm prune:*)",
+      "Bash(npm ls:*)"
     ],
     "deny": []
   }
