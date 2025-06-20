@@ -6,13 +6,39 @@ Your YouTube Summarizer extension now sends **real feedback data** to your Railw
 
 ## 🔗 **How to Access Your Feedback Data**
 
-### **Analytics Dashboard**
-Visit this URL to see your feedback analytics:
+### **🎨 Beautiful Web Dashboard (RECOMMENDED)**
+Visit this URL for a beautiful visual dashboard:
+```
+https://youtube-summarizer-api-production.up.railway.app/dashboard
+```
+**OR simply visit:**
+```
+https://youtube-summarizer-api-production.up.railway.app/
+```
+
+### **📊 Raw JSON Analytics API**
+For developers or API integration:
 ```
 https://youtube-summarizer-api-production.up.railway.app/api/feedback/analytics
 ```
 
-### **What You'll See:**
+### **🎨 What You'll See in the Dashboard:**
+
+#### **Beautiful Visual Interface:**
+- 📊 **Interactive pie charts** showing feedback by type
+- 📈 **Trend graphs** with 24h, 7d, 30d data
+- 🌍 **Language distribution** bar charts
+- 📋 **Summary type preferences** visualized
+- ⏰ **Real-time recent feedback** with timestamps
+- 🔄 **Auto-refreshes every 30 seconds**
+
+#### **Key Metrics Cards:**
+- **Total Feedback** - All-time feedback count
+- **Last 24 Hours** - Recent activity
+- **Last 7 Days** - Weekly trends  
+- **Top Issue** - Most reported problem
+
+#### **Raw JSON Data (for developers):**
 ```json
 {
   "totalFeedback": 25,
