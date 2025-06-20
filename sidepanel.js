@@ -620,8 +620,17 @@ document.addEventListener('visibilitychange', () => {
 
 // Handle messages from background script (if needed)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'videoChanged') {
+  if (message.action === 'videoChangedNotification') {
+    console.log('🎬 Received video change notification:', message.videoId);
     // Background script notifies us of video changes
     loadVideoContent(message.tab);
+  }
+  
+  if (message.action === 'tabActivated') {
+    console.log('📱 Tab activation received:', message.tab?.url);
+    // Handle tab activation from background script
+    if (message.tab && message.tab.url && message.tab.url.includes('youtube.com/watch')) {
+      loadVideoContent(message.tab);
+    }
   }
 });

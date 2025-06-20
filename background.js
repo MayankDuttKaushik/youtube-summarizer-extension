@@ -75,6 +75,26 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ available: typeof chrome.sidePanel !== 'undefined' });
     return;
   }
+  
+  if (request.action === 'videoChanged') {
+    // Forward video change notification to side panel
+    console.log('🔄 Video changed detected:', request.videoId, request.url);
+    
+    // Try to notify the side panel about the video change
+    chrome.runtime.sendMessage({
+      action: 'videoChangedNotification',
+      videoId: request.videoId,
+      tab: {
+        id: sender.tab.id,
+        url: request.url
+      }
+    }).catch(() => {
+      // Side panel might not be open, which is fine
+      console.log('Side panel not available to receive video change notification');
+    });
+    
+    return;
+  }
 });
 
 async function handleSummarization(request) {

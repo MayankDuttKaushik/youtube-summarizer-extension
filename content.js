@@ -144,11 +144,13 @@ function detectVideoChange() {
   if (newVideoId && newVideoId !== currentVideoId) {
     currentVideoId = newVideoId;
     
+    console.log('🎬 Video change detected:', newVideoId, window.location.href);
+    
     // Notify background script of video change
     chrome.runtime.sendMessage({
       action: 'videoChanged',
       videoId: newVideoId,
-      tab: { url: window.location.href }
+      url: window.location.href
     }).catch(() => {
       // Side panel might not be open, which is fine
     });
