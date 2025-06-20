@@ -115,6 +115,15 @@ async function getVideoInfo() {
            null;
   }
   
+  // Function to check if title seems valid for current video
+  function isTitleValid(title) {
+    if (!title) return false;
+    if (title.includes('YouTube')) return false;
+    if (title.includes('Loading...')) return false;
+    if (title.length < 3) return false;
+    return true;
+  }
+  
   // Function to extract channel name
   function extractChannel() {
     return document.querySelector('#channel-name a')?.textContent?.trim() ||
@@ -126,16 +135,16 @@ async function getVideoInfo() {
   // Try to get title immediately
   let videoTitle = extractTitle();
   
-  // If no title found or title doesn't seem to match the video ID, wait and retry
-  if (!videoTitle || videoTitle.includes('YouTube')) {
+  // If no valid title found, wait and retry
+  if (!isTitleValid(videoTitle)) {
     console.log('⏳ Waiting for YouTube to update title...');
     
-    // Wait up to 3 seconds for YouTube to update the title
-    for (let i = 0; i < 6; i++) {
+    // Wait up to 5 seconds for YouTube to update the title  
+    for (let i = 0; i < 10; i++) {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const newTitle = extractTitle();
-      if (newTitle && !newTitle.includes('YouTube')) {
+      if (isTitleValid(newTitle)) {
         videoTitle = newTitle;
         console.log('✅ Title updated:', videoTitle);
         break;
@@ -180,7 +189,7 @@ function detectVideoChange() {
     
     console.log('🎬 Video change detected:', newVideoId, window.location.href);
     
-    // Add a small delay to let YouTube update the page content
+    // Add a longer delay to let YouTube fully update the page content
     setTimeout(() => {
       // Notify background script of video change
       chrome.runtime.sendMessage({
@@ -190,7 +199,7 @@ function detectVideoChange() {
       }).catch(() => {
         // Side panel might not be open, which is fine
       });
-    }, 1000); // Wait 1 second for YouTube to update
+    }, 2000); // Wait 2 seconds for YouTube to update
   }
 }
 
