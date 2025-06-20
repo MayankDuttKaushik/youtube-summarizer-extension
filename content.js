@@ -58,8 +58,10 @@ async function extractTranscript() {
           const captionTracks = playerResponse?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
           
           if (captionTracks && captionTracks.length > 0) {
-            // Find English captions or auto-generated
-            const track = captionTracks.find(t => t.languageCode === 'en' || t.kind === 'asr') || captionTracks[0];
+            // Find best available captions: auto-generated first, then any language
+            const track = captionTracks.find(t => t.kind === 'asr') || // Auto-generated (any language)
+                         captionTracks.find(t => t.languageCode === 'en') || // English manual captions
+                         captionTracks[0]; // Any available captions
             
             if (track && track.baseUrl) {
               const captionResponse = await fetch(track.baseUrl);
