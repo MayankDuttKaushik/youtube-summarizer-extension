@@ -95,8 +95,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Handle tab updates (new video navigation)
 function handleTabUpdate(tabId, changeInfo, tab) {
   if (tabId === currentTabId && changeInfo.url && tab.url.includes('youtube.com/watch')) {
-    console.log('Video changed, reloading content');
-    loadVideoContent(tab);
+    console.log('🔄 Video URL changed:', changeInfo.url);
+    console.log('🧹 Clearing all previous state...');
+    
+    // Force clear everything
+    currentVideoInfo = null;
+    const contentDiv = document.getElementById('content');
+    const summaryContainer = document.getElementById('summaryContainer');
+    
+    if (contentDiv) contentDiv.innerHTML = '<div class="loading">Loading new video...</div>';
+    if (summaryContainer) summaryContainer.innerHTML = '';
+    
+    // Small delay to ensure YouTube page has updated
+    setTimeout(() => {
+      loadVideoContent(tab);
+    }, 500);
   }
 }
 
@@ -134,12 +147,17 @@ async function loadVideoContent(tab) {
     ]);
     
     if (videoInfo && videoInfo.videoId) {
-      // Only update if this is actually a different video
-      if (!currentVideoInfo || currentVideoInfo.videoId !== videoInfo.videoId) {
-        console.log(`Loading new video: ${videoInfo.title} (${videoInfo.videoId})`);
-        currentVideoInfo = videoInfo;
-        showVideoInfo(videoInfo);
+      // Always update - don't trust the comparison
+      console.log(`📺 Loading video: ${videoInfo.title} (${videoInfo.videoId})`);
+      
+      // Clear any existing summary immediately
+      const summaryContainer = document.getElementById('summaryContainer');
+      if (summaryContainer) {
+        summaryContainer.innerHTML = '';
       }
+      
+      currentVideoInfo = videoInfo;
+      showVideoInfo(videoInfo);
     } else {
       showError('Could not get video information', 'Video Detection Failed');
     }
@@ -163,6 +181,8 @@ function handleKeyboardNavigation(event) {
 
 async function showVideoInfo(videoInfo) {
   const contentDiv = document.getElementById('content');
+  
+  console.log(`🎬 Updating UI for video: "${videoInfo.title}" (${videoInfo.videoId})`);
   
   // Get saved preferences with error handling
   let language = 'en';
@@ -212,6 +232,9 @@ async function showVideoInfo(videoInfo) {
           <span class="btn-text">Summarize Video</span>
           <span class="btn-icon">✨</span>
         </button>
+        <button id="refreshBtn" class="secondary-btn" aria-label="Refresh video info" style="margin-left: 8px; padding: 8px 12px; font-size: 12px;">
+          🔄 Refresh
+        </button>
       </div>
       <div class="quick-stats" id="quickStats"></div>
     </div>
@@ -243,6 +266,26 @@ async function showVideoInfo(videoInfo) {
   document.getElementById('summarizeBtn').addEventListener('click', () => {
     const summaryType = document.querySelector('input[name="summaryType"]:checked').value;
     summarizeVideo(videoInfo, summaryType);
+  });
+  
+  // Add refresh button functionality
+  document.getElementById('refreshBtn').addEventListener('click', async () => {
+    console.log('🔄 Manual refresh requested');
+    
+    // Clear everything
+    currentVideoInfo = null;
+    const summaryContainer = document.getElementById('summaryContainer');
+    if (summaryContainer) summaryContainer.innerHTML = '';
+    
+    // Get current tab and force reload
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab && tab.url && tab.url.includes('youtube.com/watch')) {
+        await loadVideoContent(tab);
+      }
+    } catch (error) {
+      console.error('Error during manual refresh:', error);
+    }
   });
 }
 
@@ -285,8 +328,24 @@ function truncateTitle(title, maxLength) {
 }
 
 async function summarizeVideo(videoInfo, summaryType) {
+  console.log(`🎯 Starting summarization for: "${videoInfo.title}" (${videoInfo.videoId})`);
+  console.log(`📊 Summary type: ${summaryType}`);
+  
   const summaryContainer = document.getElementById('summaryContainer');
   const summarizeBtn = document.getElementById('summarizeBtn');
+  
+  // Verify we have the current video info
+  if (!currentVideoInfo || currentVideoInfo.videoId !== videoInfo.videoId) {
+    console.warn('⚠️ Video info mismatch detected, refreshing...');
+    // Try to get fresh video info
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      await loadVideoContent(tab);
+      return; // Exit and let user try again with fresh data
+    } catch (error) {
+      console.error('Error refreshing video info:', error);
+    }
+  }
   
   // Enhanced loading state
   summarizeBtn.disabled = true;
