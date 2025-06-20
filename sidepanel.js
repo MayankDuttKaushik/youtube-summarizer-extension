@@ -179,6 +179,7 @@ function handleKeyboardNavigation(event) {
   }
 }
 
+
 async function showVideoInfo(videoInfo) {
   const contentDiv = document.getElementById('content');
   
@@ -196,6 +197,7 @@ async function showVideoInfo(videoInfo) {
     console.warn('Could not load preferences from storage:', error);
     // Use defaults
   }
+  
   
   contentDiv.innerHTML = `
     <div class="status-card">
@@ -534,6 +536,7 @@ function formatSummary(summary) {
     .replace(/<p><ul>/g, '<ul>')
     .replace(/<\/ul><\/p>/g, '</ul>');
 }
+
 
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {

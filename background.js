@@ -64,6 +64,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
   
+  
   if (request.action === 'openSidePanel') {
     // Request from content script to open side panel
     chrome.sidePanel.open({ tabId: sender.tab.id }).catch(console.error);
@@ -189,6 +190,7 @@ async function handleSummarization(request) {
     }
   }
 }
+
 
 // Process very long transcripts by intelligent chunking
 async function processLongTranscript(transcript, maxChunkSize) {
