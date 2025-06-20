@@ -134,7 +134,33 @@ function getVideoDuration() {
   return durationEl ? durationEl.textContent.trim() : null;
 }
 
-// Listen for messages from popup
+// Auto-detect video changes and notify side panel
+let currentVideoId = null;
+
+function detectVideoChange() {
+  const newVideoId = getVideoId();
+  if (newVideoId && newVideoId !== currentVideoId) {
+    currentVideoId = newVideoId;
+    
+    // Notify background script of video change
+    chrome.runtime.sendMessage({
+      action: 'videoChanged',
+      videoId: newVideoId,
+      tab: { url: window.location.href }
+    }).catch(() => {
+      // Side panel might not be open, which is fine
+    });
+  }
+}
+
+// Monitor for video changes on YouTube
+const observer = new MutationObserver(detectVideoChange);
+observer.observe(document.body, { childList: true, subtree: true });
+
+// Initial detection
+detectVideoChange();
+
+// Listen for messages from side panel and background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getVideoInfo') {
     const info = getVideoInfo();
@@ -147,5 +173,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'getDuration') {
     const duration = getVideoDuration();
     sendResponse({ duration });
+  } else if (request.action === 'openSidePanel') {
+    // Request from page to open side panel
+    chrome.runtime.sendMessage({ action: 'openSidePanel' });
   }
 });

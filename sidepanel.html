@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Summarizer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px 20px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .header h1 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .header p {
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .container {
+      padding: 16px;
+      padding-bottom: 20px;
+    }
+
+    .status-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      margin-bottom: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .video-info {
+      margin-bottom: 12px;
+    }
+
+    .video-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 4px;
+      line-height: 1.4;
+      word-wrap: break-word;
+      hyphens: auto;
+    }
+
+    .video-channel {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .video-duration {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 3px;
+    }
+
+    .language-selector, .summary-type-selector {
+      margin-bottom: 12px;
+    }
+
+    .language-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .summary-type-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .language-selector label, .summary-type-selector > label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #4a5568;
+    }
+
+    .language-selector select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 13px;
+      background-color: white;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .language-selector select:hover {
+      border-color: #cbd5e0;
+    }
+
+    .language-selector select:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .radio-label:hover {
+      background-color: #f7fafc;
+    }
+
+    .radio-label input[type="radio"] {
+      margin: 0;
+    }
+
+    .button-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    button {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .primary-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .secondary-btn {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .secondary-btn:hover:not(:disabled) {
+      background: #cbd5e0;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #ffffff40;
+      border-top: 2px solid #ffffff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* TALL SUMMARY CONTAINER - Taking advantage of side panel height */
+    .summary-container {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 16px;
+      /* Allow it to grow with content, no max-height restriction */
+      min-height: 200px;
+    }
+
+    .summary-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f1f5f9;
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
+    }
+
+    .summary-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .summary-content {
+      font-size: 14px;
+      line-height: 1.7;
+      color: #4a5568;
+      word-wrap: break-word;
+      hyphens: auto;
+    }
+
+    .summary-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 16px 0 10px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .summary-content ul {
+      margin-left: 16px;
+      margin-bottom: 12px;
+    }
+
+    .summary-content li {
+      margin-bottom: 6px;
+      line-height: 1.6;
+    }
+
+    .summary-footer {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #f1f5f9;
+      text-align: center;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 32px;
+    }
+
+    .loading-spinner {
+      border: 3px solid #f3f4f6;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 3px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .error {
+      background: #fee;
+      border: 1px solid #fcc;
+      color: #c00;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .error-card {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .error-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .error-icon {
+      font-size: 18px;
+    }
+
+    .error-message {
+      color: #7f1d1d;
+      margin-bottom: 12px;
+      line-height: 1.5;
+      font-size: 13px;
+    }
+
+    .error-actions h4 {
+      color: #7f1d1d;
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .error-actions ul {
+      margin: 8px 0;
+      padding-left: 16px;
+    }
+
+    .error-actions li {
+      margin-bottom: 4px;
+      color: #7f1d1d;
+      font-size: 12px;
+    }
+
+    .warning {
+      background: #fef3cd;
+      border: 1px solid #ffeeba;
+      color: #856404;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-size: 13px;
+    }
+
+    .not-youtube {
+      text-align: center;
+      padding: 32px 16px;
+      color: #718096;
+    }
+
+    .not-youtube-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .not-youtube h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: #4a5568;
+    }
+
+    .not-youtube p {
+      font-size: 13px;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .copy-btn, .share-btn, .feedback-btn {
+      background: #e2e8f0;
+      color: #4a5568;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .copy-btn:hover, .share-btn:hover, .feedback-btn:hover {
+      background: #cbd5e0;
+    }
+
+    .copy-btn.success {
+      background: #10b981 !important;
+      color: white;
+    }
+
+    .cache-indicator {
+      color: #10b981;
+      font-size: 11px;
+      margin-left: 4px;
+    }
+
+    .time-indicator {
+      color: #6b7280;
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    .quick-stats {
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* Custom scrollbar for the entire side panel */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9ca3af;
+    }
+
+    /* YouTube navigation helper */
+    .youtube-nav {
+      background: #667eea;
+      color: white;
+      padding: 8px 16px;
+      margin: -16px -16px 16px -16px;
+      font-size: 12px;
+      text-align: center;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .youtube-nav a {
+      color: white;
+      text-decoration: underline;
+    }
+
+    /* Responsive adjustments for very narrow side panels */
+    @media (max-width: 320px) {
+      .container {
+        padding: 12px;
+      }
+      
+      .status-card {
+        padding: 12px;
+      }
+      
+      .radio-group {
+        gap: 6px;
+      }
+      
+      button {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+    }
+
+    /* Ensure proper spacing in side panel context */
+    .side-panel-footer {
+      margin-top: 20px;
+      padding: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #718096;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    /* Loading states optimized for side panel */
+    .loading-message {
+      font-size: 13px;
+      color: #6b7280;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>YouTube Summarizer</h1>
+    <p>AI-powered video summaries in your side panel</p>
+  </div>
+  
+  <div class="container">
+    <div id="content">
+      <!-- Content will be dynamically inserted here -->
+    </div>
+    
+    <div class="side-panel-footer">
+      <p>✨ Powered by OpenAI GPT-3.5 Turbo</p>
+    </div>
+  </div>
+  
+  <script src="sidepanel.js"></script>
+</body>
+</html>

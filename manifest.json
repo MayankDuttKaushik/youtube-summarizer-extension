@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "YouTube Video Summarizer",
-  "version": "1.0",
-  "description": "Summarize YouTube videos using AI - save time and get key insights instantly",
+  "version": "2.0",
+  "description": "Summarize YouTube videos using AI - save time and get key insights instantly in a side panel",
   "permissions": [
     "activeTab",
-    "storage"
+    "storage",
+    "sidePanel"
   ],
   "host_permissions": [
     "https://*.youtube.com/*",
@@ -21,8 +22,11 @@
       "run_at": "document_idle"
     }
   ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "Open YouTube Summarizer Side Panel",
     "default_icon": {
       "16": "icon16.png",
       "48": "icon48.png",

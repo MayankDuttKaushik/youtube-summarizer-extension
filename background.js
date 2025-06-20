@@ -1,4 +1,4 @@
-// Enhanced background.js with caching and performance improvements
+// Enhanced background.js with side panel integration and caching
 
 const API_BASE_URL = 'https://youtube-summarizer-api-production.up.railway.app';
 
@@ -19,10 +19,61 @@ function getCachedSummary(cacheKey) {
   return null;
 }
 
+// Side Panel Management
+chrome.action.onClicked.addListener(async (tab) => {
+  // Toggle side panel when extension icon is clicked
+  await chrome.sidePanel.open({ tabId: tab.id });
+});
+
+// Auto-open side panel on YouTube video pages
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('youtube.com/watch')) {
+    try {
+      // Auto-open side panel for YouTube videos
+      await chrome.sidePanel.open({ tabId: tabId });
+    } catch (error) {
+      // Side panel might already be open or not available
+      console.log('Could not auto-open side panel:', error.message);
+    }
+  }
+});
+
+// Handle tab activation to update side panel content
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    const tab = await chrome.tabs.get(activeInfo.tabId);
+    
+    // Send message to side panel about tab change (if side panel is open)
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'tabActivated',
+        tab: tab
+      });
+    } catch (error) {
+      // Side panel might not be open, which is fine
+    }
+  } catch (error) {
+    console.error('Error handling tab activation:', error);
+  }
+});
+
+// Handle runtime messages (from side panel and content scripts)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'summarize') {
     handleSummarization(request).then(sendResponse);
     return true;
+  }
+  
+  if (request.action === 'openSidePanel') {
+    // Request from content script to open side panel
+    chrome.sidePanel.open({ tabId: sender.tab.id }).catch(console.error);
+    return;
+  }
+  
+  if (request.action === 'checkSidePanelStatus') {
+    // Check if side panel is available
+    sendResponse({ available: typeof chrome.sidePanel !== 'undefined' });
+    return;
   }
 });
 
