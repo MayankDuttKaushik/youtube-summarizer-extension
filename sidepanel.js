@@ -508,23 +508,70 @@ function showFeedbackForm() {
   });
 }
 
-function sendFeedback(type) {
-  // Track feedback type (privacy-friendly)
-  chrome.storage.local.get(['feedbackStats'], (result) => {
-    const stats = result.feedbackStats || {};
-    stats[type] = (stats[type] || 0) + 1;
-    chrome.storage.local.set({ feedbackStats: stats });
-  });
+async function sendFeedback(type) {
+  try {
+    // Get current context for better feedback data
+    const selectedLanguage = document.getElementById('language')?.value || 'en';
+    const summaryType = document.querySelector('input[name="summaryType"]:checked')?.value || 'unknown';
+    const videoTitle = currentVideoInfo?.title || null;
+    
+    // Send feedback to your Railway API
+    const response = await fetch('https://youtube-summarizer-api-production.up.railway.app/api/feedback', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        type: type,
+        summaryType: summaryType,
+        language: selectedLanguage,
+        videoTitle: videoTitle
+      })
+    });
+    
+    if (response.ok) {
+      console.log('Feedback sent successfully');
+      
+      // Also track locally for offline functionality
+      chrome.storage.local.get(['feedbackStats'], (result) => {
+        const stats = result.feedbackStats || {};
+        stats[type] = (stats[type] || 0) + 1;
+        chrome.storage.local.set({ feedbackStats: stats });
+      });
+      
+      // Show success message
+      document.querySelector('.feedback-form').innerHTML = `
+        <div style="text-align: center; padding: 16px;">
+          <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
+          <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
+          <p style="color: #718096; font-size: 12px;">Your feedback has been sent and will help us improve the extension.</p>
+        </div>
+      `;
+    } else {
+      throw new Error('Failed to send feedback');
+    }
+    
+  } catch (error) {
+    console.error('Error sending feedback:', error);
+    
+    // Fallback: Still track locally and show thank you
+    chrome.storage.local.get(['feedbackStats'], (result) => {
+      const stats = result.feedbackStats || {};
+      stats[type] = (stats[type] || 0) + 1;
+      chrome.storage.local.set({ feedbackStats: stats });
+    });
+    
+    // Show fallback message
+    document.querySelector('.feedback-form').innerHTML = `
+      <div style="text-align: center; padding: 16px;">
+        <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
+        <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
+        <p style="color: #718096; font-size: 12px;">Your feedback has been recorded and will help us improve the extension.</p>
+      </div>
+    `;
+  }
   
-  // Show thank you message
-  document.querySelector('.feedback-form').innerHTML = `
-    <div style="text-align: center; padding: 16px;">
-      <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
-      <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
-      <p style="color: #718096; font-size: 12px;">Your feedback has been recorded and will help us improve the extension.</p>
-    </div>
-  `;
-  
+  // Remove feedback form after 3 seconds
   setTimeout(() => {
     document.querySelector('.feedback-form')?.remove();
   }, 3000);
