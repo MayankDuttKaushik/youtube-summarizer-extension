@@ -36,6 +36,16 @@ const ERROR_SOLUTIONS = {
     title: 'High Traffic',
     message: 'Our servers are experiencing high demand.',
     actions: ['Wait 30 seconds and try again', 'Try during off-peak hours']
+  },
+  'HTTP 502': {
+    title: 'Server Temporarily Down',
+    message: 'The summarization service is temporarily unavailable.',
+    actions: ['Wait a few minutes and try again', 'Check your internet connection']
+  },
+  'Failed to generate summary. Please try again.': {
+    title: 'Generation Failed',
+    message: 'The AI service encountered an issue.',
+    actions: ['Try again in a moment', 'Try with a shorter video', 'Check if video has captions']
   }
 };
 
@@ -134,8 +144,18 @@ function handleKeyboardNavigation(event) {
 async function showVideoInfo(videoInfo) {
   const contentDiv = document.getElementById('content');
   
-  // Get saved preferences
-  const { language = 'en', lastSummaryType = 'detailed' } = await chrome.storage.sync.get(['language', 'lastSummaryType']);
+  // Get saved preferences with error handling
+  let language = 'en';
+  let lastSummaryType = 'detailed';
+  
+  try {
+    const prefs = await chrome.storage.sync.get(['language', 'lastSummaryType']);
+    language = prefs.language || 'en';
+    lastSummaryType = prefs.lastSummaryType || 'detailed';
+  } catch (error) {
+    console.warn('Could not load preferences from storage:', error);
+    // Use defaults
+  }
   
   contentDiv.innerHTML = `
     <div class="status-card">
@@ -183,12 +203,20 @@ async function showVideoInfo(videoInfo) {
   
   // Save preferences when changed
   document.getElementById('language').addEventListener('change', async (e) => {
-    await chrome.storage.sync.set({ language: e.target.value });
+    try {
+      await chrome.storage.sync.set({ language: e.target.value });
+    } catch (error) {
+      console.warn('Could not save language preference:', error);
+    }
   });
   
   document.querySelectorAll('input[name="summaryType"]').forEach(radio => {
     radio.addEventListener('change', async (e) => {
-      await chrome.storage.sync.set({ lastSummaryType: e.target.value });
+      try {
+        await chrome.storage.sync.set({ lastSummaryType: e.target.value });
+      } catch (error) {
+        console.warn('Could not save summary type preference:', error);
+      }
     });
   });
   

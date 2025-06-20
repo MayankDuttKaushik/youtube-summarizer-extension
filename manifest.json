@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Video Summarizer",
-  "version": "2.0",
+  "version": "2.0.1",
   "description": "Summarize YouTube videos using AI - save time and get key insights instantly in a side panel",
   "permissions": [
     "activeTab",
@@ -37,5 +37,8 @@
     "16": "icon16.png",
     "48": "icon48.png",
     "128": "icon128.png"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; frame-src 'none';"
   }
 }
