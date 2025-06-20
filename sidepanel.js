@@ -44,8 +44,18 @@ const ERROR_SOLUTIONS = {
   },
   'Failed to generate summary. Please try again.': {
     title: 'Generation Failed',
-    message: 'The AI service encountered an issue.',
-    actions: ['Try again in a moment', 'Try with a shorter video', 'Check if video has captions']
+    message: 'This video cannot be summarized.',
+    actions: ['Check if video has captions/subtitles', 'Try a different video with speech content', 'Avoid music videos or very short clips']
+  },
+  'Could not extract transcript. Make sure the video has captions available.': {
+    title: 'No Transcript Available',
+    message: 'This video has no captions or subtitles.',
+    actions: ['Try videos with auto-generated captions', 'Look for videos with CC (closed captions)', 'Educational/talk videos usually work best']
+  },
+  'Video transcript too short to summarize. Try a longer video with more speech content.': {
+    title: 'Video Too Short',
+    message: 'This video has very little spoken content.',
+    actions: ['Try videos longer than 2-3 minutes', 'Choose videos with continuous speech', 'Avoid music videos or silent content']
   }
 };
 
@@ -315,6 +325,10 @@ async function summarizeVideo(videoInfo, summaryType) {
     
     if (!transcript) {
       throw new Error('Could not extract transcript. Make sure the video has captions available.');
+    }
+    
+    if (transcript.length < 50) {
+      throw new Error('Video transcript too short to summarize. Try a longer video with more speech content.');
     }
     
     // Get selected language and summary type
