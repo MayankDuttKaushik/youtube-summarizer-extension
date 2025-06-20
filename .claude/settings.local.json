@@ -12,7 +12,9 @@
       "Bash(grep:*)",
       "Bash(ls:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:youtube-summarizer-api-production.up.railway.app)"
+      "WebFetch(domain:youtube-summarizer-api-production.up.railway.app)",
+      "Bash(npm install:*)",
+      "Bash(mv:*)"
     ],
     "deny": []
   }

@@ -310,9 +310,6 @@ async function summarizeVideo(videoInfo, summaryType) {
     // Show success feedback
     displaySummary(response.summary, summaryType, response.cached, response.processingTime);
     
-    // Track usage analytics (privacy-friendly)
-    trackUsage(summaryType, selectedLanguage, transcript.length);
-    
   } catch (error) {
     clearInterval(messageInterval);
     showEnhancedError(error.message);
@@ -375,9 +372,6 @@ function displaySummary(summary, summaryType, cached = false, processingTime = 0
         </div>
       </div>
       <div class="summary-content" role="main">${formatSummary(summary)}</div>
-      <div class="summary-footer">
-        <button id="improveBtn" class="feedback-btn">Suggest Improvement</button>
-      </div>
     </div>
   `;
   
@@ -389,11 +383,6 @@ function displaySummary(summary, summaryType, cached = false, processingTime = 0
   // Share functionality
   document.getElementById('shareBtn').addEventListener('click', () => {
     shareSummary(summary);
-  });
-  
-  // Feedback functionality
-  document.getElementById('improveBtn').addEventListener('click', () => {
-    showFeedbackForm();
   });
 }
 
@@ -411,170 +400,6 @@ async function shareSummary(summary) {
     // Fallback: copy to clipboard
     copyToClipboard(summary);
   }
-}
-
-function trackUsage(summaryType, language, transcriptLength) {
-  // Privacy-friendly analytics - no personal data
-  chrome.storage.local.get(['usageStats'], (result) => {
-    const stats = result.usageStats || { totalSummaries: 0, languages: {}, types: {} };
-    stats.totalSummaries++;
-    stats.languages[language] = (stats.languages[language] || 0) + 1;
-    stats.types[summaryType] = (stats.types[summaryType] || 0) + 1;
-    chrome.storage.local.set({ usageStats: stats });
-  });
-}
-
-function showFeedbackForm() {
-  const summaryContainer = document.getElementById('summaryContainer');
-  const feedbackHTML = `
-    <div class="feedback-form">
-      <div class="feedback-header">
-        <h3>Help Us Improve</h3>
-        <p>Your feedback helps make summaries better for everyone.</p>
-      </div>
-      <div class="feedback-options">
-        <button class="feedback-option" data-feedback-type="accuracy">
-          📊 Improve Accuracy
-        </button>
-        <button class="feedback-option" data-feedback-type="length">
-          📏 Better Length
-        </button>
-        <button class="feedback-option" data-feedback-type="language">
-          🌍 Language Issues
-        </button>
-        <button class="feedback-option" data-feedback-type="other">
-          💭 Other Feedback
-        </button>
-      </div>
-      <button id="closeFeedback" class="secondary-btn" style="margin-top: 12px;">Close</button>
-    </div>
-  `;
-  
-  summaryContainer.innerHTML += feedbackHTML;
-  
-  // Add styles for feedback form
-  const style = document.createElement('style');
-  style.textContent = `
-    .feedback-form {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 12px;
-      border: 1px solid #e2e8f0;
-    }
-    .feedback-header h3 {
-      color: #2d3748;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-    .feedback-header p {
-      color: #718096;
-      font-size: 12px;
-      margin-bottom: 12px;
-    }
-    .feedback-options {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .feedback-option {
-      padding: 8px;
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .feedback-option:hover {
-      background: #e2e8f0;
-      transform: translateY(-1px);
-    }
-  `;
-  document.head.appendChild(style);
-  
-  // Add event listeners for feedback buttons
-  document.querySelectorAll('.feedback-option').forEach(button => {
-    button.addEventListener('click', (e) => {
-      const feedbackType = e.target.getAttribute('data-feedback-type');
-      sendFeedback(feedbackType);
-    });
-  });
-  
-  // Add event listener for close button
-  document.getElementById('closeFeedback').addEventListener('click', () => {
-    document.querySelector('.feedback-form').remove();
-  });
-}
-
-async function sendFeedback(type) {
-  try {
-    // Get current context for better feedback data
-    const selectedLanguage = document.getElementById('language')?.value || 'en';
-    const summaryType = document.querySelector('input[name="summaryType"]:checked')?.value || 'unknown';
-    const videoTitle = currentVideoInfo?.title || null;
-    
-    // Send feedback to your Railway API
-    const response = await fetch('https://youtube-summarizer-api-production.up.railway.app/api/feedback', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        type: type,
-        summaryType: summaryType,
-        language: selectedLanguage,
-        videoTitle: videoTitle
-      })
-    });
-    
-    if (response.ok) {
-      console.log('Feedback sent successfully');
-      
-      // Also track locally for offline functionality
-      chrome.storage.local.get(['feedbackStats'], (result) => {
-        const stats = result.feedbackStats || {};
-        stats[type] = (stats[type] || 0) + 1;
-        chrome.storage.local.set({ feedbackStats: stats });
-      });
-      
-      // Show success message
-      document.querySelector('.feedback-form').innerHTML = `
-        <div style="text-align: center; padding: 16px;">
-          <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
-          <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
-          <p style="color: #718096; font-size: 12px;">Your feedback has been sent and will help us improve the extension.</p>
-        </div>
-      `;
-    } else {
-      throw new Error('Failed to send feedback');
-    }
-    
-  } catch (error) {
-    console.error('Error sending feedback:', error);
-    
-    // Fallback: Still track locally and show thank you
-    chrome.storage.local.get(['feedbackStats'], (result) => {
-      const stats = result.feedbackStats || {};
-      stats[type] = (stats[type] || 0) + 1;
-      chrome.storage.local.set({ feedbackStats: stats });
-    });
-    
-    // Show fallback message
-    document.querySelector('.feedback-form').innerHTML = `
-      <div style="text-align: center; padding: 16px;">
-        <div style="font-size: 20px; margin-bottom: 8px;">✅</div>
-        <h3 style="color: #2d3748; margin-bottom: 6px;">Thank You!</h3>
-        <p style="color: #718096; font-size: 12px;">Your feedback has been recorded and will help us improve the extension.</p>
-      </div>
-    `;
-  }
-  
-  // Remove feedback form after 3 seconds
-  setTimeout(() => {
-    document.querySelector('.feedback-form')?.remove();
-  }, 3000);
 }
 
 // Keep your existing helper functions
