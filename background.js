@@ -33,7 +33,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       await chrome.sidePanel.open({ tabId: tabId });
     } catch (error) {
       // Side panel might already be open or not available
-      console.log('Could not auto-open side panel:', error.message);
     }
   }
 });
@@ -53,7 +52,7 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
       // Side panel might not be open, which is fine
     }
   } catch (error) {
-    console.error('Error handling tab activation:', error);
+    // Error handling tab activation
   }
 });
 
@@ -67,7 +66,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.action === 'openSidePanel') {
     // Request from content script to open side panel
-    chrome.sidePanel.open({ tabId: sender.tab.id }).catch(console.error);
+    chrome.sidePanel.open({ tabId: sender.tab.id }).catch(() => {});
     return;
   }
   
@@ -79,8 +78,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   if (request.action === 'videoChanged') {
     // Forward video change notification to side panel
-    console.log('🔄 Video changed detected:', request.videoId, request.url);
-    
     // Try to notify the side panel about the video change
     chrome.runtime.sendMessage({
       action: 'videoChangedNotification',
@@ -91,7 +88,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     }).catch(() => {
       // Side panel might not be open, which is fine
-      console.log('Side panel not available to receive video change notification');
     });
     
     return;
@@ -106,7 +102,6 @@ async function handleSummarization(request) {
   const cachedResult = getCachedSummary(cacheKey);
   
   if (cachedResult) {
-    console.log('Returning cached summary');
     return { summary: cachedResult, success: true, cached: true };
   }
   
@@ -174,7 +169,7 @@ async function handleSummarization(request) {
     };
     
   } catch (error) {
-    console.error('Summarization error:', error);
+    // Summarization error occurred
     
     // Enhanced error categorization
     if (error.message.includes('fetch')) {

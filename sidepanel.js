@@ -65,7 +65,7 @@ let currentVideoInfo = null;
 
 // Initialize side panel when DOM is loaded
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log('Side panel loaded');
+  // Side panel loaded
   
   // Add keyboard navigation support
   document.addEventListener('keydown', handleKeyboardNavigation);
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadVideoContent(tab);
     
   } catch (error) {
-    console.error('Error initializing side panel:', error);
+    // Error initializing side panel
     showError('Error initializing side panel. Please refresh and try again.', 'Initialization Error');
   }
 });
@@ -95,8 +95,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Handle tab updates (new video navigation)
 function handleTabUpdate(tabId, changeInfo, tab) {
   if (tabId === currentTabId && changeInfo.url && tab.url.includes('youtube.com/watch')) {
-    console.log('🔄 Video URL changed:', changeInfo.url);
-    console.log('🧹 Clearing all previous state...');
+    // Video URL changed - clearing previous state
     
     // Force clear everything
     currentVideoInfo = null;
@@ -125,7 +124,7 @@ async function handleTabActivated(activeInfo) {
       showNotYouTube();
     }
   } catch (error) {
-    console.error('Error handling tab activation:', error);
+    // Error handling tab activation
   }
 }
 
@@ -148,7 +147,7 @@ async function loadVideoContent(tab) {
     
     if (videoInfo && videoInfo.videoId) {
       // Always update - don't trust the comparison
-      console.log(`📺 Loading video: ${videoInfo.title} (${videoInfo.videoId})`);
+      // Loading new video
       
       // Clear any existing summary immediately
       const summaryContainer = document.getElementById('summaryContainer');
@@ -183,7 +182,7 @@ function handleKeyboardNavigation(event) {
 async function showVideoInfo(videoInfo) {
   const contentDiv = document.getElementById('content');
   
-  console.log(`🎬 Updating UI for video: "${videoInfo.title}" (${videoInfo.videoId})`);
+  // Updating UI for video
   
   // Get saved preferences with error handling
   let language = 'en';
@@ -194,7 +193,7 @@ async function showVideoInfo(videoInfo) {
     language = prefs.language || 'en';
     lastSummaryType = prefs.lastSummaryType || 'detailed';
   } catch (error) {
-    console.warn('Could not load preferences from storage:', error);
+    // Could not load preferences from storage
     // Use defaults
   }
   
@@ -251,7 +250,7 @@ async function showVideoInfo(videoInfo) {
     try {
       await chrome.storage.sync.set({ language: e.target.value });
     } catch (error) {
-      console.warn('Could not save language preference:', error);
+      // Could not save language preference
     }
   });
   
@@ -260,7 +259,7 @@ async function showVideoInfo(videoInfo) {
       try {
         await chrome.storage.sync.set({ lastSummaryType: e.target.value });
       } catch (error) {
-        console.warn('Could not save summary type preference:', error);
+        // Could not save summary type preference
       }
     });
   });
@@ -272,7 +271,7 @@ async function showVideoInfo(videoInfo) {
   
   // Add refresh button functionality
   document.getElementById('refreshBtn').addEventListener('click', async () => {
-    console.log('🔄 Manual refresh requested');
+    // Manual refresh requested
     
     // Clear everything
     currentVideoInfo = null;
@@ -286,7 +285,7 @@ async function showVideoInfo(videoInfo) {
         await loadVideoContent(tab);
       }
     } catch (error) {
-      console.error('Error during manual refresh:', error);
+      // Error during manual refresh
     }
   });
 }
@@ -330,22 +329,21 @@ function truncateTitle(title, maxLength) {
 }
 
 async function summarizeVideo(videoInfo, summaryType) {
-  console.log(`🎯 Starting summarization for: "${videoInfo.title}" (${videoInfo.videoId})`);
-  console.log(`📊 Summary type: ${summaryType}`);
+  // Starting summarization
   
   const summaryContainer = document.getElementById('summaryContainer');
   const summarizeBtn = document.getElementById('summarizeBtn');
   
   // Verify we have the current video info
   if (!currentVideoInfo || currentVideoInfo.videoId !== videoInfo.videoId) {
-    console.warn('⚠️ Video info mismatch detected, refreshing...');
+    // Video info mismatch detected, refreshing...
     // Try to get fresh video info
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       await loadVideoContent(tab);
       return; // Exit and let user try again with fresh data
     } catch (error) {
-      console.error('Error refreshing video info:', error);
+      // Error refreshing video info
     }
   }
   
@@ -507,7 +505,7 @@ async function shareSummary(summary) {
         text: summary
       });
     } catch (error) {
-      console.log('Share cancelled or failed:', error);
+      // Share cancelled or failed
     }
   } else {
     // Fallback: copy to clipboard
@@ -617,20 +615,20 @@ document.addEventListener('visibilitychange', () => {
           loadVideoContent(tab);
         }
       }
-    }).catch(console.error);
+    }).catch(() => {});
   }
 });
 
 // Handle messages from background script (if needed)
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'videoChangedNotification') {
-    console.log('🎬 Received video change notification:', message.videoId);
+    // Background script notifies us of video changes
     // Background script notifies us of video changes
     loadVideoContent(message.tab);
   }
   
   if (message.action === 'tabActivated') {
-    console.log('📱 Tab activation received:', message.tab?.url);
+    // Handle tab activation from background script
     // Handle tab activation from background script
     if (message.tab && message.tab.url && message.tab.url.includes('youtube.com/watch')) {
       loadVideoContent(message.tab);
