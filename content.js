@@ -44,7 +44,7 @@ async function extractTranscript() {
       }
     }
   } catch (error) {
-    // Method 2 failed, trying final method...
+    console.log('Method 2 failed, trying final method...');
   }
 
   // Method 3: Try to extract from ytInitialPlayerResponse
@@ -95,7 +95,7 @@ async function extractTranscript() {
       }
     }
   } catch (error) {
-    // Method 3 failed
+    console.error('Method 3 failed:', error);
   }
 
   return null;
@@ -137,7 +137,7 @@ async function getVideoInfo() {
   
   // If no valid title found, wait and retry
   if (!isTitleValid(videoTitle)) {
-    // Waiting for YouTube to update title...
+    console.log('⏳ Waiting for YouTube to update title...');
     
     // Wait up to 5 seconds for YouTube to update the title  
     for (let i = 0; i < 10; i++) {
@@ -146,7 +146,7 @@ async function getVideoInfo() {
       const newTitle = extractTitle();
       if (isTitleValid(newTitle)) {
         videoTitle = newTitle;
-        // Title updated successfully
+        console.log('✅ Title updated:', videoTitle);
         break;
       }
     }
@@ -159,7 +159,7 @@ async function getVideoInfo() {
   
   const channelName = extractChannel();
   
-  // Video info extracted successfully
+  console.log('📺 Video info extracted:', { videoId, title: videoTitle, channel: channelName });
   
   return {
     videoId,
@@ -187,7 +187,7 @@ function detectVideoChange() {
   if (newVideoId && newVideoId !== currentVideoId) {
     currentVideoId = newVideoId;
     
-    // Video change detected
+    console.log('🎬 Video change detected:', newVideoId, window.location.href);
     
     // Add a longer delay to let YouTube fully update the page content
     setTimeout(() => {
@@ -216,7 +216,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     getVideoInfo().then(info => {
       sendResponse(info);
     }).catch(error => {
-      // Error getting video info
+      console.error('Error getting video info:', error);
       sendResponse({ error: 'Failed to get video info' });
     });
     return true; // Will respond asynchronously
